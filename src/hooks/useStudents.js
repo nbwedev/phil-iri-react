@@ -1,63 +1,41 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// useStudents.js
-//
-// All student data access goes through this hook.
-// Components call useStudents() — they never call storage.js directly.
-//
-// For a basics-level React developer:
-// Think of this hook as a "manager" that handles all the storage details.
-// Your component just asks: "give me the students" and "add this student."
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from "react";
 import {
   getStudents,
   addStudent,
   updateStudent,
   deleteStudent,
-} from '../utils/storage.js'
+} from "../utils/storage.js";
 
 export function useStudents(classId = null) {
-  const [students, setStudents] = useState([])
-  const [loading, setLoading]   = useState(true)
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load students from storage on mount, filtered by classId if provided
   useEffect(() => {
-    const all = getStudents()
-    const filtered = classId
-      ? all.filter(s => s.classId === classId)
-      : all
-    setStudents(filtered)
-    setLoading(false)
-  }, [classId])
+    const all = getStudents();
+    setStudents(classId ? all.filter((s) => s.classId === classId) : all);
+    setLoading(false);
+  }, [classId, refreshKey]);
 
-  // Add a student and update local state immediately
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
   const add = useCallback((studentData) => {
-    const newStudent = addStudent(studentData)
-    setStudents(prev => [...prev, newStudent])
-    return newStudent
-  }, [])
+    const newStudent = addStudent(studentData);
+    setStudents((prev) => [...prev, newStudent]);
+    return newStudent;
+  }, []);
 
-  // Update a student
   const update = useCallback((id, updates) => {
-    const updated = updateStudent(id, updates)
-    if (updated) {
-      setStudents(prev => prev.map(s => s.id === id ? updated : s))
-    }
-    return updated
-  }, [])
+    const updated = updateStudent(id, updates);
+    if (updated)
+      setStudents((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    return updated;
+  }, []);
 
-  // Delete a student
   const remove = useCallback((id) => {
-    deleteStudent(id)
-    setStudents(prev => prev.filter(s => s.id !== id))
-  }, [])
+    deleteStudent(id);
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+  }, []);
 
-  return {
-    students,   // array of student objects
-    loading,    // boolean — show a spinner while true
-    add,        // fn(studentData) → newStudent
-    update,     // fn(id, updates) → updatedStudent
-    remove,     // fn(id) → void
-  }
+  return { students, loading, refresh, add, update, remove };
 }

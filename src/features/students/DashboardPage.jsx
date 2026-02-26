@@ -1,19 +1,30 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// DashboardPage.jsx
-//
-// Quick overview for the teacher. Shows student count and a prompt
-// to start if empty. Grows naturally as more features are added.
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Users, ClipboardList, ChevronRight, BookOpen } from "lucide-react";
 import { useStudents } from "../../hooks/useStudents.js";
 import { useAssessments } from "../../hooks/useAssessments.js";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { students, loading: studentsLoading } = useStudents();
-  const { assessments, loading: assessmentsLoading } = useAssessments();
+  const location = useLocation();
+
+  const {
+    students,
+    loading: studentsLoading,
+    refresh: refreshStudents,
+  } = useStudents();
+  const {
+    assessments,
+    loading: assessmentsLoading,
+    refresh: refreshAssessments,
+  } = useAssessments();
+
+  // Every time this route becomes active (including navigating back to it),
+  // re-read storage so counts reflect any deletions done on other tabs.
+  useEffect(() => {
+    refreshStudents();
+    refreshAssessments();
+  }, [location.key]); // location.key changes on every navigation event
 
   const completedAssessments = assessments.filter((a) => a.completedAt);
 
@@ -27,7 +38,6 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
-      {/* ── Greeting ── */}
       <div className="bg-gradient-to-br from-brand-800 to-brand-600 rounded-2xl p-5 text-white">
         <div className="flex items-center gap-2 mb-1">
           <BookOpen className="w-5 h-5 text-brand-200" />
@@ -43,7 +53,6 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           icon={Users}
@@ -61,7 +70,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Quick action ── */}
       <button
         onClick={() => navigate("/students")}
         className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-2xl px-4 py-4 hover:border-brand-200 hover:shadow-sm transition-all group"

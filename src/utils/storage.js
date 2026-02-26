@@ -3,9 +3,6 @@
 //
 // All localStorage read/write goes through here.
 // Components and hooks NEVER call localStorage directly.
-//
-// Why: If you ever switch from localStorage to IndexedDB, or add Firebase,
-// you change THIS FILE only — nothing else in the app needs to change.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { STORAGE_KEYS, APP_VERSION } from "../constants/philIRI.js";
@@ -68,8 +65,23 @@ export function updateStudent(id, updates) {
 }
 
 export function deleteStudent(id) {
-  const students = getStudents().filter((s) => s.id !== id);
-  saveStudents(students);
+  // Remove the student record
+  saveStudents(getStudents().filter((s) => s.id !== id));
+
+  // Remove all assessments belonging to this student,
+  // and cascade-delete their GST + passage results too
+  const studentAssessments = getAssessments().filter((a) => a.studentId === id);
+  const assessmentIds = new Set(studentAssessments.map((a) => a.id));
+
+  saveAssessments(getAssessments().filter((a) => a.studentId !== id));
+  save(
+    "philiri_gst_results",
+    getGSTResults().filter((r) => !assessmentIds.has(r.assessmentId)),
+  );
+  save(
+    "philiri_passage_results",
+    getPassageResults().filter((r) => !assessmentIds.has(r.assessmentId)),
+  );
 }
 
 // ── Assessments ───────────────────────────────────────────────────────────────
@@ -112,8 +124,6 @@ export function updateAssessment(id, updates) {
 }
 
 // ── GST Results ───────────────────────────────────────────────────────────────
-// GST results are stored separately from assessments.
-// One assessment can have multiple GST results (Filipino + English).
 
 export function getGSTResults() {
   return load("philiri_gst_results", []);
@@ -125,7 +135,6 @@ export function getGSTResultsForAssessment(assessmentId) {
 
 export function saveGSTResult(result) {
   const results = getGSTResults();
-  // If a result for this assessment+language already exists, replace it
   const existingIndex = results.findIndex(
     (r) =>
       r.assessmentId === result.assessmentId && r.language === result.language,
@@ -141,6 +150,28 @@ export function saveGSTResult(result) {
     results.push(newResult);
   }
   save("philiri_gst_results", results);
+  return newResult;
+}
+
+// ── Passage Results ───────────────────────────────────────────────────────────
+
+export function getPassageResults() {
+  return load("philiri_passage_results", []);
+}
+
+export function getPassageResultsForAssessment(assessmentId) {
+  return getPassageResults().filter((r) => r.assessmentId === assessmentId);
+}
+
+export function savePassageResult(result) {
+  const results = getPassageResults();
+  const newResult = {
+    ...result,
+    id: crypto.randomUUID(),
+    savedAt: new Date().toISOString(),
+  };
+  results.push(newResult);
+  save("philiri_passage_results", results);
   return newResult;
 }
 
@@ -167,35 +198,10 @@ export function addClass(classData) {
 }
 
 // ── App version check ─────────────────────────────────────────────────────────
-// If the stored version doesn't match the current version,
-// you can run migrations here in the future.
 
 export function checkAppVersion() {
   const storedVersion = load(STORAGE_KEYS.APP_VERSION, null);
   if (storedVersion !== APP_VERSION) {
     save(STORAGE_KEYS.APP_VERSION, APP_VERSION);
-    // Future: runMigrations(storedVersion, APP_VERSION)
   }
-}
-
-// ── Passage Results ───────────────────────────────────────────────────────────
-
-export function getPassageResults() {
-  return load("philiri_passage_results", []);
-}
-
-export function getPassageResultsForAssessment(assessmentId) {
-  return getPassageResults().filter((r) => r.assessmentId === assessmentId);
-}
-
-export function savePassageResult(result) {
-  const results = getPassageResults();
-  const newResult = {
-    ...result,
-    id: crypto.randomUUID(),
-    savedAt: new Date().toISOString(),
-  };
-  results.push(newResult);
-  save("philiri_passage_results", results);
-  return newResult;
 }
