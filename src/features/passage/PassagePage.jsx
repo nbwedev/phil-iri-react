@@ -41,6 +41,7 @@ import {
   READING_LEVELS,
 } from "../../constants/philIRI.js";
 import { resolveAssessmentRoute } from "../../utils/assessmentRouting.js";
+import { updateAssessment } from "../../utils/storage.js";
 import { cn } from "../../utils/cn.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,10 +120,15 @@ export default function PassagePage() {
         lowerGrade={lowerGrade}
         onRetry={handleRetryLower}
         onDone={() => {
-          // Check if there's another language still to test for this assessment.
-          // resolveAssessmentRoute will return the English passage URL if needed,
-          // or the student page if everything is done.
           const nextRoute = resolveAssessmentRoute(studentId, assessmentId);
+          const isDone = nextRoute === `/students/${studentId}`;
+          if (isDone) {
+            // All languages tested — mark the assessment complete so the
+            // student page stops showing "Assessment in progress"
+            updateAssessment(assessmentId, {
+              completedAt: new Date().toISOString(),
+            });
+          }
           navigate(nextRoute);
         }}
       />

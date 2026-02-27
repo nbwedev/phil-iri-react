@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   BookOpen,
@@ -18,10 +19,21 @@ import { cn } from "../../utils/cn.js";
 export default function StudentDetailPage() {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { student, loading: studentLoading, notFound } = useStudent(studentId);
-  const { assessments, loading: assessmentsLoading } =
-    useAssessments(studentId);
+  const {
+    assessments,
+    loading: assessmentsLoading,
+    refresh,
+  } = useAssessments(studentId);
+
+  // Re-read assessments from storage every time we navigate to this page.
+  // Without this, completedAt updates made by PassagePage are invisible here
+  // because useAssessments only loads on mount, not on subsequent navigations.
+  useEffect(() => {
+    refresh();
+  }, [location.key]);
 
   if (studentLoading || assessmentsLoading) {
     return (
@@ -63,7 +75,6 @@ export default function StudentDetailPage() {
       finalLevel: null,
       languages: [],
     });
-    // No GST results yet for a brand-new assessment → goes to GST page
     navigate(resolveAssessmentRoute(studentId, newAssessment.id));
   }
 

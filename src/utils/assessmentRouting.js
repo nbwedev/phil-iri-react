@@ -1,20 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// assessmentRouting.js
-//
-// Single source of truth for "where does this assessment go next?"
-//
-// Logic:
-//   Only consider languages that have a GST result on record.
-//   A missing GST for a language = that language was never administered = skip it.
-//
-//   For each language that HAS a GST result (Filipino first, then English):
-//     1. GST score ≥ 14 → passed, no passage needed → skip
-//     2. Passage already done for this language → skip
-//     3. Otherwise → go to passage for this language
-//
-//   If nothing left to do → go to student page
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { LANGUAGES, GST } from "../constants/philIRI.js";
 import {
   getGSTResultsForAssessment,
@@ -30,7 +13,7 @@ export function resolveAssessmentRoute(studentId, assessmentId) {
   for (const lang of [LANGUAGES.FILIPINO, LANGUAGES.ENGLISH]) {
     const gst = gstResults.find((r) => r.language === lang);
 
-    // No GST for this language — it was never administered, skip entirely
+    // No GST for this language — never administered, skip it
     if (!gst) continue;
 
     // GST passed — no passage needed
