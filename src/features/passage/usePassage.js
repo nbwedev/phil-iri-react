@@ -260,8 +260,11 @@ export function usePassage(passage, assessmentId) {
 
     const saved = savePassageResult(result);
 
+    // Update the assessment with this language's result.
+    // Do NOT set completedAt here — the assessment may still have another
+    // language (e.g. English) to test. completedAt is set by the routing
+    // layer once all languages are done.
     updateAssessment(assessmentId, {
-      completedAt: new Date().toISOString(),
       finalLevel: levelResult.level,
       languages: [passage.language],
     });

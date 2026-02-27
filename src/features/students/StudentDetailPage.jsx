@@ -1,15 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// StudentDetailPage.jsx
-//
-// The hub for one student. Shows:
-//   - Student info header (name, grade, LRN)
-//   - Assessment history (list of past sessions)
-//   - Action buttons to start a new Pre-test or Post-test
-//
-// URL: /students/:studentId
-// The :studentId comes from React Router and is read with useParams()
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -23,24 +11,18 @@ import { useStudent } from "../../hooks/useStudent.js";
 import { useAssessments } from "../../hooks/useAssessments.js";
 import AssessmentCard from "./AssessmentCard.jsx";
 import { ASSESSMENT_STAGES } from "../../constants/philIRI.js";
+import { addAssessment } from "../../utils/storage.js";
+import { resolveAssessmentRoute } from "../../utils/assessmentRouting.js";
 import { cn } from "../../utils/cn.js";
 
 export default function StudentDetailPage() {
-  // useParams() reads the :studentId value out of the URL
   const { studentId } = useParams();
   const navigate = useNavigate();
 
-  // Load this specific student
   const { student, loading: studentLoading, notFound } = useStudent(studentId);
+  const { assessments, loading: assessmentsLoading } =
+    useAssessments(studentId);
 
-  // Load all assessments for this student
-  const {
-    assessments,
-    loading: assessmentsLoading,
-    add: addAssessment,
-  } = useAssessments(studentId);
-
-  // ── Loading state ──
   if (studentLoading || assessmentsLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -49,8 +31,6 @@ export default function StudentDetailPage() {
     );
   }
 
-  // ── Not found state ──
-  // Handles direct URL access with a bad ID
   if (notFound || !student) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-10 text-center">
@@ -65,25 +45,17 @@ export default function StudentDetailPage() {
     );
   }
 
-  // ── Derived values ──
   const displayName = `${student.firstName} ${student.lastName}`;
   const initials =
     `${student.firstName[0]}${student.lastName[0]}`.toUpperCase();
   const hasAssessments = assessments.length > 0;
-
-  // Check if there's already an in-progress assessment
-  // We only allow one in-progress session at a time
   const inProgress = assessments.find((a) => !a.completedAt);
 
-  // Sort assessments newest first for display
   const sortedAssessments = [...assessments].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
 
-  // ── Start a new assessment session ──
   function handleStartAssessment(stage) {
-    // Create the assessment record in storage first,
-    // then navigate to the GST screen with the new ID
     const newAssessment = addAssessment({
       studentId,
       stage,
@@ -91,12 +63,12 @@ export default function StudentDetailPage() {
       finalLevel: null,
       languages: [],
     });
-    navigate(`/students/${studentId}/gst?assessmentId=${newAssessment.id}`);
+    // No GST results yet for a brand-new assessment → goes to GST page
+    navigate(resolveAssessmentRoute(studentId, newAssessment.id));
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
-      {/* ── Back button ── */}
       <button
         onClick={() => navigate("/students")}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors -ml-1 min-h-tap"
@@ -105,20 +77,16 @@ export default function StudentDetailPage() {
         All Students
       </button>
 
-      {/* ── Student header card ── */}
+      {/* Student header */}
       <div className="bg-white border border-gray-100 rounded-2xl p-5">
         <div className="flex items-start gap-4">
-          {/* Avatar */}
           <div className="w-14 h-14 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg shrink-0">
             {initials}
           </div>
-
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-bold text-gray-900 leading-tight">
               {displayName}
             </h1>
-
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
               <InfoPill
                 icon={GraduationCap}
@@ -133,14 +101,13 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
-      {/* ── Start assessment actions ── */}
+      {/* Start assessment */}
       <div>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
           New Assessment
         </h2>
 
         {inProgress ? (
-          // There's already one in progress — show a resume prompt instead
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
             <ClipboardList className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
@@ -154,7 +121,6 @@ export default function StudentDetailPage() {
             </div>
           </div>
         ) : (
-          // No in-progress session — show start buttons
           <div className="grid grid-cols-2 gap-3">
             <AssessmentStartButton
               label="Pre-test"
@@ -172,7 +138,7 @@ export default function StudentDetailPage() {
         )}
       </div>
 
-      {/* ── Assessment history ── */}
+      {/* Assessment history */}
       <div>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
           Assessment History
@@ -200,8 +166,6 @@ export default function StudentDetailPage() {
     </div>
   );
 }
-
-// ── Small helper components ───────────────────────────────────────────────────
 
 function InfoPill({ icon: Icon, label, mono = false }) {
   return (

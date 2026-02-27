@@ -40,6 +40,7 @@ import {
   WPM_BENCHMARKS,
   READING_LEVELS,
 } from "../../constants/philIRI.js";
+import { resolveAssessmentRoute } from "../../utils/assessmentRouting.js";
 import { cn } from "../../utils/cn.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -117,7 +118,13 @@ export default function PassagePage() {
         canRetry={canRetry}
         lowerGrade={lowerGrade}
         onRetry={handleRetryLower}
-        onDone={() => navigate("/students/" + studentId)}
+        onDone={() => {
+          // Check if there's another language still to test for this assessment.
+          // resolveAssessmentRoute will return the English passage URL if needed,
+          // or the student page if everything is done.
+          const nextRoute = resolveAssessmentRoute(studentId, assessmentId);
+          navigate(nextRoute);
+        }}
       />
     );
   }
