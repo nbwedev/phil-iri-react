@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="#1e40af"/>
+  <!-- Open book -->
+  <g transform="translate(256,248)">
+    <!-- Left page -->
+    <path d="M-138,-96 C-138,-96 -20,-74 -20,0 C-20,74 -20,116 -20,116 C-20,116 -138,96 -138,96 Z"
+          fill="#ffffff" opacity="0.95"/>
+    <!-- Right page -->
+    <path d="M138,-96 C138,-96 20,-74 20,0 C20,74 20,116 20,116 C20,116 138,96 138,96 Z"
+          fill="#ffffff" opacity="0.95"/>
+    <!-- Spine -->
+    <rect x="-10" y="-96" width="20" height="212" rx="4" fill="#bfdbfe"/>
+    <!-- Lines on left page -->
+    <line x1="-118" y1="-28" x2="-36" y2="-36" stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="-118" y1="4"   x2="-36" y2="-4"  stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="-118" y1="36"  x2="-36" y2="28"  stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="-118" y1="68"  x2="-36" y2="60"  stroke="#93c5fd" stroke-width="6" stroke-linecap="round"/>
+    <!-- Lines on right page -->
+    <line x1="36" y1="-36" x2="118" y2="-28" stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="36" y1="-4"  x2="118" y2="4"   stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="36" y1="28"  x2="118" y2="36"  stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="36" y1="60"  x2="118" y2="68"  stroke="#93c5fd" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <!-- Small checkmark badge -->
+  <circle cx="392" cy="392" r="64" fill="#10b981"/>
+  <polyline points="364,392 384,412 424,368" fill="none" stroke="white" stroke-width="10"
+            stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
